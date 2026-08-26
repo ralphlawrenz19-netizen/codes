@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>????</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(skyblue, lightgreen);
+            overflow: hidden;
+        }
+
+        .garden {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .flower {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            touch-action: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .flower.big {
+            width: 180px;
+            height: 180px;
+        }
+
+        .flower.big .flower-inner {
+            width: 180px;
+            height: 180px;
+        }
+
+        .flower.big .petal {
+            width: 140px;
+            height: 140px;
+        }
+
+        .flower.big .p1 { top: -70px; left: 20px; }
+        .flower.big .p2 { top: 20px; left: -50px; }
+        .flower.big .p3 { top: 20px; left: 110px; }
+        .flower.big .p4 { top: 110px; left: 20px; }
+
+        .flower.big .center {
+            width: 100px;
+            height: 100px;
+            top: 40px;
+            left: 40px;
+            font-size: 24px;
+        }
+
+        .flower.big .stem {
+            top: 170px;
+            left: 84px;
+            height: 260px;
+            width: 16px;
+        }
+
+        .flower-inner {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            animation: sway 3s ease-in-out infinite alternate;
+            transform-origin: 50% 20%;
+        }
+
+        .petal {
+            width: 80px;
+            height: 80px;
+            background: pink;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .p1 { top: -40px; left: 10px; }
+        .p2 { top: 10px; left: -30px; }
+        .p3 { top: 10px; left: 50px; }
+        .p4 { top: 50px; left: 10px; }
+
+        .center {
+            width: 60px;
+            height: 60px;
+            background: gold;
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: blue;
+            font-weight: 700;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .stem {
+            width: 12px;
+            height: 180px;
+            background: green;
+            position: absolute;
+            top: 90px;
+            left: 44px;
+            z-index: -1;
+        }
+
+        @keyframes sway {
+            from { transform: rotate(-5deg); }
+            to { transform: rotate(5deg); }
+        }
+    </style>
+    </head>
+<body>
+
+    <div class="garden">
+    <div class="flower" id="template-flower" style="left:50%;top:40%;transform:translate(-50%,-50%) scale(1) rotate(0deg);">
+        <div class="flower-inner">
+            <div class="petal p1"></div>
+            <div class="petal p2"></div>
+            <div class="petal p3"></div>
+            <div class="petal p4"></div>
+                <div class="center">Nightyyy</div>
+            <div class="stem"></div>
+        </div>
+    </div>
+
+    <!-- Large centered purple flower -->
+    <div class="flower big" style="left:50%;top:50%;transform:translate(-50%,-50%) scale(1) rotate(0deg);">
+        <div class="flower-inner">
+            <div class="petal p1" style="background: rebeccapurple;"></div>
+            <div class="petal p2" style="background: rebeccapurple;"></div>
+            <div class="petal p3" style="background: rebeccapurple;"></div>
+            <div class="petal p4" style="background: rebeccapurple;"></div>
+                <div class="center" style="background: plum;">Nightyyy</div>
+            <div class="stem" style="background: darkgreen;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        const garden = document.querySelector('.garden');
+        const template = document.querySelector('#template-flower');
+
+        function makeDraggable(el){
+            let dragging = false;
+            let pointerId = null;
+
+            function getTransformSuffix(e){
+                const s = el.style.transform || '';
+                if(s.includes('translate(-50%,-50%)')) return s.replace(/translate\(-50%,-50%\)\s*/, '');
+                return s;
+            }
+
+            let transformSuffix = getTransformSuffix();
+
+            el.addEventListener('pointerdown', (ev) => {
+                ev.preventDefault();
+                dragging = true;
+                pointerId = ev.pointerId;
+                try{ el.setPointerCapture(pointerId); }catch(e){}
+                transformSuffix = getTransformSuffix();
+            });
+
+            function onMove(ev){
+                if(!dragging || ev.pointerId !== pointerId) return;
+                const rect = garden.getBoundingClientRect();
+                const x = ev.clientX - rect.left;
+                const y = ev.clientY - rect.top;
+                el.style.left = x + 'px';
+                el.style.top = y + 'px';
+                el.style.transform = (`translate(-50%,-50%) ${transformSuffix}`).trim();
+            }
+
+            function endDrag(ev){
+                if(pointerId !== null && ev.pointerId !== pointerId) return;
+                dragging = false;
+                try{ el.releasePointerCapture(pointerId); }catch(e){}
+                pointerId = null;
+            }
+
+            el.addEventListener('pointermove', onMove);
+            el.addEventListener('pointerup', endDrag);
+            el.addEventListener('pointercancel', endDrag);
+
+            // also attach to garden so moves continue when pointer leaves the flower
+            garden.addEventListener('pointermove', onMove);
+            garden.addEventListener('pointerup', endDrag);
+            garden.addEventListener('pointercancel', endDrag);
+        }
+
+        for(let i=0;i<20;i++){
+            const clone = template.cloneNode(true);
+            clone.id = '';
+            const x = Math.random()*100;
+            const y = 5 + Math.random()*80;
+            const scale = 0.6 + Math.random()*0.9;
+            const rot = Math.floor(Math.random()*360);
+            clone.style.left = x + '%';
+            clone.style.top = y + '%';
+            clone.style.transform = `translate(-50%,-50%) scale(${scale}) rotate(${rot}deg)`;
+            const inner = clone.querySelector('.flower-inner');
+            inner.style.animationDuration = (2 + Math.random()*3).toFixed(2) + 's';
+            const petals = clone.querySelectorAll('.petal');
+            const hue = Math.floor(Math.random()*60)+300;
+            petals.forEach(p => p.style.background = `hsl(${hue} 80% 75%)`);
+            document.querySelector('.garden').appendChild(clone);
+            makeDraggable(clone);
+        }
+
+        // make existing template and big flower draggable too
+        makeDraggable(template);
+        const big = document.querySelector('.flower.big');
+        if(big) makeDraggable(big);
+    })();
+</script>
+
+</body>
+</html>
