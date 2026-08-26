@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Snake (single file)</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #1a1a2e; }
+    canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <!-- render.js -->
+  <script>
+  var canvas = document.getElementById('canvas');
+  var ctx    = canvas.getContext('2d');
+
+  var COLORS = {
+    bg:        '#1a1a2e',
+    grid:      '#16213e',
+    snakeHead: '#56ef83',
+    snakeBody: '#2ecc71',
+    food:      '#e74c3c',
+    text:      '#ffffff',
+    dimText:   'rgba(255,255,255,0.5)',
+    overlay:   'rgba(0,0,0,0.55)',
+  };
+
+  function cell(x, y, color) {
+    var pad = 1;
+    ctx.fillStyle = color;
+    ctx.fillRect(x * CELL + pad, y * CELL + pad, CELL - pad * 2, CELL - pad * 2);
+  }
+
+  function draw() {
+    var W = canvas.width, H = canvas.height;
+
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 0.5;
+    for (var x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, H); ctx.stroke(); }
+    for (var y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(W, y * CELL); ctx.stroke(); }
+
+    ctx.fillStyle = COLORS.food;
+    ctx.beginPath();
+    ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, Math.max(2, CELL / 2 - 2), 0, Math.PI * 2);
+    ctx.fill();
+
+    snake.forEach(function(s, i) { cell(s.x, s.y, i === 0 ? COLORS.snakeHead : COLORS.snakeBody); });
+
+    var fontSize = Math.max(12, CELL * 0.8);
+    ctx.font = 'bold ' + fontSize + 'px monospace';
+    ctx.fillStyle = COLORS.dimText;
+    ctx.textAlign = 'right';
+    ctx.fillText(score, W - CELL * 0.5, CELL * 1.2);
+    if (best) {
+      ctx.font = Math.max(10, CELL * 0.6) + 'px monospace';
+      ctx.fillText('best ' + best, W - CELL * 0.5, CELL * 2.0);
+    }
+    ctx.textAlign = 'left';
+
+    if (phase === 'idle') {
+      drawOverlay('SNAKE', 'swipe or press  ← ↑ → ↓  to start');
+    } else if (phase === 'dead') {
+      drawOverlay('GAME OVER', 'score ' + score + '   tap or press arrow to play again');
+    }
+  }
+
+  function drawOverlay(title, sub) {
+    var W = canvas.width, H = canvas.height;
+    var titleSize = Math.max(20, CELL * 1.6);
+    var subSize   = Math.max(11, CELL * 0.65);
+
+    ctx.fillStyle = COLORS.overlay;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+    ctx.font = 'bold ' + titleSize + 'px monospace';
+    ctx.fillStyle = COLORS.text;
+    ctx.fillText(title, W / 2, H / 2 - titleSize * 0.6);
+
+    ctx.font = subSize + 'px monospace';
+    ctx.fillStyle = COLORS.dimText;
+    ctx.fillText(sub, W / 2, H / 2 + subSize * 1.4);
+    ctx.textAlign = 'left';
+  }
+  </script>
+
+  <!-- game.js -->
+  <script>
+  var COLS = 20; var ROWS = 20; var FPS = 9; var CELL;
+  var snake, dir, nextDir, food, score, best, phase, loopTimer;
+  function init() { snake = [{ x:10,y:10 },{ x:9,y:10 },{ x:8,y:10 }]; dir = { x:1,y:0 }; nextDir = { x:1,y:0 }; score = 0; placeFood(); }
+  function placeFood() { do { food = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; } while (snake.some(function(s){ return s.x === food.x && s.y === food.y; })); }
+  function start() { if (loopTimer) clearInterval(loopTimer); init(); phase = 'running'; loopTimer = setInterval(tick, 1000 / FPS); }
+  function tick() { dir = nextDir; var head = { x: (snake[0].x + dir.x + COLS) % COLS, y: (snake[0].y + dir.y + ROWS) % ROWS }; if (snake.some(function(s){ return s.x === head.x && s.y === head.y; })) { phase = 'dead'; best = Math.max(best, score); clearInterval(loopTimer); draw(); return; } snake.unshift(head); if (head.x === food.x && head.y === food.y) { score++; placeFood(); } else { snake.pop(); } draw(); }
+  function resize() { var size = Math.min(window.innerWidth, window.innerHeight); CELL = Math.floor(size / COLS); var px = CELL * COLS; canvas.width = px; canvas.height = px; draw(); }
+  window.addEventListener('resize', resize);
+  best = 0; phase = 'idle'; init(); resize();
+  </script>
+
+  <!-- input.js -->
+  <script>
+  var KEY_MAP = { 37: 'left', 38: 'up', 39: 'right', 40: 'down' };
+  document.addEventListener('keydown', function(e) {
+    var action = KEY_MAP[e.keyCode]; if (!action) return; e.preventDefault();
+    if (phase !== 'running') { start(); return; }
+    if (action === 'left'  && dir.x === 0) nextDir = { x: -1, y:  0 };
+    if (action === 'right' && dir.x === 0) nextDir = { x:  1, y:  0 };
+    if (action === 'up'    && dir.y === 0) nextDir = { x:  0, y: -1 };
+    if (action === 'down'  && dir.y === 0) nextDir = { x:  0, y:  1 };
+  });
+  var touchStart = null;
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); var t = e.touches[0]; touchStart = { x: t.clientX, y: t.clientY }; }, { passive: false });
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault(); if (!touchStart) return; var t = e.changedTouches[0]; var dx = t.clientX - touchStart.x; var dy = t.clientY - touchStart.y; touchStart = null;
+    if (phase !== 'running') { start(); return; }
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+    if (Math.abs(dx) > Math.abs(dy)) { if (dx > 0 && dir.x === 0) nextDir = { x:  1, y: 0 }; if (dx < 0 && dir.x === 0) nextDir = { x: -1, y: 0 }; }
+    else { if (dy > 0 && dir.y === 0) nextDir = { x: 0, y:  1 }; if (dy < 0 && dir.y === 0) nextDir = { x: 0, y: -1 }; }
+  }, { passive: false });
+  </script>
+</body>
+</html>
