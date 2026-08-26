@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moonlit Letter</title>
+    <style>
+        /* ===== Global Styles ===== */
+        :root {
+            color-scheme: dark;
+            --bg: #09090B;
+            --midnight: #0d1221;
+            --deep: #05060a;
+            --violet: #7c3aed;
+            --pink: #f8c4ff;
+            --gold: #f7c773;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-strong: rgba(255, 255, 255, 0.14);
+            --shadow: 0 40px 120px rgba(0, 0, 0, 0.35);
+            --text-light: #f8f7f5;
+            --text-soft: rgba(242, 225, 248, 0.85);
+            --border: rgba(255, 255, 255, 0.12);
+            --radius: 32px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: radial-gradient(circle at top, rgba(41, 50, 69, 0.2), transparent 34%),
+                linear-gradient(180deg, #09090B 0%, #05060a 100%);
+            color: var(--text-light);
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        button, input {
+            font: inherit;
+        }
+
+        button {
+            border: none;
+            background: none;
+        }
+
+        body {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scene {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+
+        .scene.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scene-backdrop,
+        .starfield,
+        .moon-glow,
+        .moon,
+        .clouds,
+        .fog,
+        .particles,
+        .fireflies,
+        .sparkles,
+        .door-flash,
+        .envelope-flash {
+            position: absolute;
+            inset: 0;
+        }
+
+        .scene--night {
+            overflow: hidden;
+        }
+
+        .starfield {
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px),
+                        radial-gradient(circle, rgba(255,255,255,0.36) 1px, transparent 1px);
+            background-size: 100px 100px, 200px 200px;
+            animation: starfieldMove 65s linear infinite;
+            opacity: 0.78;
+            filter: blur(0.35px);
+        }
+
+        @keyframes starfieldMove {
+            from { background-position: 0 0, 0 0; }
+            to { background-position: -220px 180px, 220px -180px; }
+        }
+
+        .moon-glow {
+            background: radial-gradient(circle at 42% 24%, rgba(255, 238, 186, 0.18), transparent 18%);
+            opacity: 0.9;
+        }
+
+        .moon {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 30%, #ffffff, #f2e7c5 22%, #c7b89e 52%, rgba(255,255,255,0.05) 100%);
+            box-shadow: 0 0 140px rgba(255, 248, 191, 0.22), inset 0 0 18px rgba(255, 255, 255, 0.22);
+            top: 12%;
+            left: 62%;
+            transform: translate(-50%, -50%);
+            z-index: 6;
+        }
+
+        .clouds {
+            background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 65%);
+            filter: blur(18px);
+            opacity: 0.45;
+        }
+
+        .clouds::before,
+        .clouds::after {
+            content: '';
+            position: absolute;
+            width: 120%;
+            height: 180px;
+            left: -10%;
+            background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 58%);
+        }
+
+        .clouds--slow { top: 12%; animation: cloudsDrift 180s linear infinite; height: 250px; }
+        .clouds--medium { top: 38%; animation: cloudsDrift 132s linear infinite reverse; height: 180px; opacity: 0.35; }
+        .clouds--fast { top: 62%; animation: cloudsDrift 92s linear infinite; height: 120px; opacity: 0.28; }
+
+        @keyframes cloudsDrift {
+            from { transform: translateX(-14%); }
+            to { transform: translateX(14%); }
+        }
+
+        .fog {
+            bottom: 0;
+            height: 35%;
+            background: linear-gradient(to top, rgba(9, 9, 12, 0.95), rgba(9, 9, 12, 0.02));
+            pointer-events: none;
+        }
+
+        .particles,
+        .fireflies,
+        .sparkles {
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        .particles {
+            background: radial-gradient(circle, rgba(255,255,255,0.28) 1px, transparent 1px);
+            background-size: 48px 48px;
+            opacity: 0.4;
+            animation: particlesGlow 15s ease-in-out infinite;
+        }
+
+        @keyframes particlesGlow {
+            0%, 100% { opacity: 0.38; }
+            50% { opacity: 0.58; }
+        }
+
+        .fireflies::before,
+        .fireflies::after,
+        .sparkles::before,
+        .sparkles::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            filter: blur(0.8px);
+        }
+
+        .fireflies::before { width: 6px; height: 6px; top: 15%; left: 22%; box-shadow: 120px 70px 0 0 rgba(255, 236, 121, 0.5), 280px 140px 0 0 rgba(255, 255, 255, 0.35), 420px 40px 0 0 rgba(255, 211, 121, 0.36); }
+        .fireflies::after { width: 8px; height: 8px; top: 45%; left: 70%; box-shadow: 54px 104px 0 0 rgba(255, 233, 145, 0.65), 140px 30px 0 0 rgba(255, 255, 255, 0.4), 340px 200px 0 0 rgba(238, 188, 255, 0.38); }
+        .sparkles::before { width: 4px; height: 4px; top: 26%; left: 52%; box-shadow: 56px 120px 0 0 rgba(255,255,255,0.5), 140px 44px 0 0 rgba(255, 211, 127,0.38); }
+        .sparkles::after { width: 5px; height: 5px; top: 70%; left: 32%; box-shadow: 90px 45px 0 0 rgba(175, 112, 255,0.4), 206px 128px 0 0 rgba(255, 255, 255,0.32); }
+
+        .door-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 55%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: center;
+        }
+
+        .door-card {
+            width: min(280px, 76vw);
+            min-height: 420px;
+            border-radius: 40px;
+            background: linear-gradient(180deg, #0e0f19 0%, #121523 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: var(--shadow), inset 0 0 2px rgba(255,255,255,0.06);
+            cursor: pointer;
+            transform: translateY(0) scale(1);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            overflow: hidden;
+        }
+
+        .door-card:hover {
+            transform: translateY(-8px) scale(1.04);
+            box-shadow: 0 70px 170px rgba(0,0,0,0.45), inset 0 0 24px rgba(255, 202, 92,0.14);
+        }
+
+        .door-panel {
+            position: relative;
+            height: 100%;
+            background: linear-gradient(180deg, #24150b 0%, #3e2919 24%, #2f1f17 57%, #1a1110 100%);
+            box-shadow: inset 0 0 24px rgba(255, 180, 90, 0.12);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 32px 20px;
+        }
+
+        .door-panel::before {
+            content: '';
+            position: absolute;
+            inset: 24px;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1), transparent 26%),
+                        linear-gradient(90deg, rgba(255,255,255,0.08), transparent 40%, rgba(255,255,255,0.03));
+            border-radius: 28px;
+            mix-blend-mode: screen;
+            opacity: 0.7;
+        }
+
+        .door-top {
+            width: 120px;
+            height: 18px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            box-shadow: inset 0 0 6px rgba(255,255,255,0.12);
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .door-edge-light {
+            position: absolute;
+            inset: 20px;
+            border-radius: 32px;
+            box-shadow:
+                inset 0 0 48px rgba(255, 199, 80, 0.18),
+                inset 0 0 28px rgba(255, 175, 60, 0.12);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .door-handle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #f7d28d, #b88a49);
+            position: absolute;
+            right: 42px;
+            top: 52%;
+            box-shadow: 0 4px 16px rgba(255, 202, 103, 0.18);
+        }
+
+        .door-copy {
+            margin-top: 22px;
+            color: var(--text-soft);
+            letter-spacing: 0.18em;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .scene--door {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(9,9,12,0.98), rgba(3,3,6,1));
+        }
+
+        .door-flash {
+            background: radial-gradient(circle at 50% 50%, rgba(255, 234, 144, 0.16), transparent 24%);
+            mix-blend-mode: screen;
+            opacity: 0;
+        }
+
+        .door-portal {
+            width: 68vmin;
+            height: 68vmin;
+            max-width: 700px;
+            max-height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 45% 45%, rgba(255, 246, 193, 0.18), transparent 30%),
+                        radial-gradient(circle at 50% 50%, rgba(120, 80, 255, 0.12), transparent 40%);
+            box-shadow: 0 0 140px rgba(255, 214, 139,0.22), inset 0 0 52px rgba(137, 83, 255,0.14);
+            animation: portalPulse 7.4s ease-in-out infinite;
+        }
+
+        @keyframes portalPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .scene--envelope .scene-backdrop {
+            background: radial-gradient(circle at 60% 8%, rgba(255, 244, 210, 0.1), transparent 22%);
+            opacity: 0.7;
+            filter: blur(24px);
+        }
+
+        .floating-envelope {
+            width: 260px;
+            height: 170px;
+            position: absolute;
+            left: 50%;
+            top: 48%;
+            transform: translate(-50%, -50%) rotate(-3deg);
+            border-radius: 26px;
+            background: linear-gradient(180deg, rgba(255, 254, 247, 0.95), rgba(248, 235, 214, 0.95));
+            box-shadow: 0 52px 120px rgba(0,0,0,0.22), inset 0 0 2px rgba(255,255,255,0.24);
+            cursor: pointer;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            overflow: hidden;
+            z-index: 12;
+            animation: envelopeFloat 7.4s ease-in-out infinite;
+        }
+
+        .floating-envelope:hover {
+            transform: translate(-50%, -50%) rotate(0deg) scale(1.03);
+            box-shadow: 0 72px 170px rgba(0,0,0,0.28);
+        }
+
+        .envelope-shell {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248, 240, 224, 0.9));
+        }
+
+        .envelope-flap {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 62%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250, 238, 216, 0.96));
+            clip-path: polygon(0 0, 100% 0, 100% 40%, 50% 100%, 0 40%);
+            transition: transform 0.85s cubic-bezier(0.25, 0.82, 0.33, 1);
+            transform-origin: top center;
+        }
+
+        .envelope-glow {
+            position: absolute;
+            inset: 12px;
+            background: radial-gradient(circle at 45% 25%, rgba(255, 212, 117, 0.24), transparent 28%);
+            filter: blur(16px);
+        }
+
+        .prompt--subtle {
+            position: absolute;
+            width: 100%;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.72);
+            font-size: 0.95rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .scene--letter {
+            background: radial-gradient(circle at 50% 14%, rgba(255, 223, 141, 0.11), transparent 18%),
+                        linear-gradient(180deg, rgba(8, 10, 18, 0.98), rgba(3, 3, 6, 0.98));
+        }
+
+        .letter-backdrop {
+            background: radial-gradient(circle at 60% 12%, rgba(255, 241, 200, 0.08), transparent 20%);
+            opacity: 0.75;
+            filter: blur(28px);
+        }
+
+        .letter-stage {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 28px;
+        }
+
+        .letter-card {
+            width: min(780px, 92vw);
+            max-width: 830px;
+            padding: 42px;
+            border-radius: 42px;
+            background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(246, 236, 221, 0.96));
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 90px 190px rgba(0,0,0,0.24), inset 0 0 0 1px rgba(255,255,255,0.26);
+            backdrop-filter: blur(18px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .letter-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 42px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent 40%);
+            pointer-events: none;
+        }
+
+        .letter-header {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .letter-mark {
+            display: inline-flex;
+            padding: 14px 26px;
+            border-radius: 999px;
+            background: rgba(255, 214, 114, 0.18);
+            color: #5d432a;
+            letter-spacing: 0.16em;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.92rem;
+        }
+
+        .letter-body {
+            position: relative;
+            max-height: 56vh;
+            overflow-y: auto;
+            padding-right: 18px;
+            font-family: 'Georgia', serif;
+            font-size: clamp(1rem, 1.05vw, 1.16rem);
+            line-height: 1.95;
+            color: #3f2f1f;
+        }
+
+        .letter-body p {
+            margin-bottom: 1.8em;
+            opacity: 0;
+            transform: translateY(24px);
+            animation: paragraphReveal 0.9s ease forwards;
+        }
+
+        .letter-body p:last-child { margin-bottom: 0; }
+
+        .letter-body .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.05em;
+            margin-left: 4px;
+            background: #5f4d3f;
+            animation: blinkCursor 0.7s steps(2, start) infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes paragraphReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blinkCursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .letter-actions {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .glass-button {
+            border-radius: 18px;
+            padding: 16px 22px;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.12);
+            color: #f8f5f0;
+            box-shadow: 0 18px 38px rgba(29, 12, 54, 0.14);
+            cursor: pointer;
+            transition: transform 0.28s ease, background 0.28s ease, box-shadow 0.28s ease;
+            backdrop-filter: blur(16px);
+        }
+
+        .glass-button:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.18);
+            box-shadow: 0 24px 54px rgba(29, 12, 54, 0.2);
+        }
+
+        .letter-ui {
+            position: absolute;
+            top: 24px;
+            right: 26px;
+            width: calc(100% - 52px);
+            display: flex;
+            justify-content: flex-end;
+            pointer-events: none;
+        }
+
+        .music-control {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 999px;
+            background: rgba(9,9,12,0.62);
+            border: 1px solid rgba(255,255,255,0.14);
+            box-shadow: 0 18px 46px rgba(0,0,0,0.28);
+        }
+
+        .music-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: transform 0.28s ease, background 0.28s ease;
+        }
+
+        .music-button.playing {
+            animation: musicSpin 3.2s linear infinite;
+        }
+
+        @keyframes musicSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        #volumeRange {
+            width: 132px;
+            accent-color: rgba(247, 199, 82, 0.9);
+        }
+
+        .mouse-particle {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,238,173,0.96), rgba(255,255,255,0.42));
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0.95;
+            filter: blur(0.6px);
+            mix-blend-mode: screen;
+            transition: transform 0.55s ease-out, opacity 0.55s ease-out;
+        }
+
+        .hidden { opacity: 0 !important; }
+
+        @media (max-width: 960px) {
+            .letter-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .music-control { width: 100%; }
+        }
+
+        @media (max-width: 640px) {
+            .door-card { width: 84vw; height: 58vh; }
+            .letter-card { padding: 26px; }
+            .letter-ui { position: static; width: auto; margin-top: 18px; justify-content: center; }
+            .letter-actions { grid-template-columns: 1fr; }
+            .prompt { font-size: 0.82rem; }
+            .prompt--subtle { font-size: 0.84rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene scene--night active" id="sceneNight">
+        <div class="starfield"></div>
+        <div class="moon-glow"></div>
+        <div class="moon"></div>
+        <div class="clouds clouds--slow"></div>
+        <div class="clouds clouds--medium"></div>
+        <div class="clouds clouds--fast"></div>
+        <div class="fog"></div>
+        <div class="particles"></div>
+        <div class="fireflies"></div>
+        <div class="sparkles"></div>
+        <div class="door-wrapper">
+            <div class="door-card" id="doorCard" tabindex="0" role="button" aria-label="Open the magical door">
+                <div class="door-panel">
+                    <div class="door-top"></div>
+                    <div class="door-edge-light"></div>
+                    <div class="door-handle"></div>
+                </div>
+            </div>
+            <div class="door-copy">Click the door to begin</div>
+        </div>
+    </div>
+
+    <div class="scene scene--door" id="sceneDoor">
+        <div class="door-backdrop"></div>
+        <div class="door-flash" id="doorFlash"></div>
+        <div class="door-portal"></div>
+    </div>
+
+    <div class="scene scene--envelope" id="sceneEnvelope">
+        <div class="scene-backdrop"></div>
+        <div class="ambient"></div>
+        <div class="clouds clouds--slow"></div>
+        <div class="clouds clouds--medium"></div>
+        <div class="clouds clouds--fast"></div>
+        <div class="fireflies"></div>
+        <div class="particles"></div>
+        <div class="floating-envelope" id="envelopeCard" tabindex="0" role="button" aria-label="Open the letter">
+            <div class="envelope-shell"></div>
+            <div class="envelope-flap"></div>
+            <div class="envelope-glow"></div>
+        </div>
+        <div class="prompt prompt--subtle">You've received a letter</div>
+    </div>
+
+    <div class="scene scene--letter" id="sceneLetter">
+        <div class="scene-backdrop letter-backdrop"></div>
+        <div class="clouds clouds--slow"></div>
+        <div class="clouds clouds--medium"></div>
+        <div class="fireflies"></div>
+        <div class="particles"></div>
+        <div class="letter-stage">
+            <div class="letter-card" id="letterCard">
+                <div class="letter-header">
+                    <span class="letter-mark">Moonlit Letter</span>
+                </div>
+                <div class="letter-body" id="letterBody"></div>
+                <div class="letter-actions">
+                    <button class="glass-button" id="replayBtn">Replay Animation</button>
+                    <button class="glass-button" id="downloadBtn">Download Letter</button>
+                    <button class="glass-button" id="closeBtn">Close Letter</button>
+                    <button class="glass-button" id="skipBtn">Skip Animation</button>
+                </div>
+            </div>
+        </div>
+        <div class="letter-ui">
+            <div class="music-control" aria-label="Music controls">
+                <button class="music-button" id="musicBtn" aria-label="Play music">?</button>
+                <input type="range" id="volumeRange" min="0" max="1" step="0.05" value="0.42" aria-label="Volume" />
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sceneNight = document.getElementById('sceneNight');
+        const sceneDoor = document.getElementById('sceneDoor');
+        const sceneEnvelope = document.getElementById('sceneEnvelope');
+        const sceneLetter = document.getElementById('sceneLetter');
+        const doorCard = document.getElementById('doorCard');
+        const envelopeCard = document.getElementById('envelopeCard');
+        const letterBody = document.getElementById('letterBody');
+        const musicBtn = document.getElementById('musicBtn');
+        const volumeRange = document.getElementById('volumeRange');
+        const replayBtn = document.getElementById('replayBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const envelopeFlap = document.querySelector('.envelope-flap');
+        const doorFlash = document.getElementById('doorFlash');
+
+        let currentScene = 'night';
+        let typing = { paragraph: 0, index: 0, running: false, timer: null };
+        let audioContext = null;
+        let masterGain = null;
+        let musicPlaying = false;
+
+        const letterParagraphs = [
+            'Dear dreamer,',
+            'When midnight whispered your name, a hidden door appeared beneath the moonlight. I have waited in the glow of evening so I could send you a quiet letter from the heart.',
+            'Every breath of this night carries a little warmth straight to you. Each star was lit to guide you gently toward this page.',
+            'May the words inside unfold like petals, and may this message feel like a secret shared only between us.',
+            'With every soft glow and gentle breeze, know that something beautiful is reaching out to you from the quiet of the dark.',
+            'Always,',
+            'A quiet admirer beneath the moon.'
+        ];
+
+        const scenes = {
+            door: () => {
+                sceneNight.classList.remove('active');
+                sceneDoor.classList.add('active');
+                currentScene = 'door';
+                doorFlash.style.animation = 'flashOut 1.2s ease forwards';
+                setTimeout(() => openScene('envelope'), 1200);
+            },
+            envelope: () => {
+                sceneDoor.classList.remove('active');
+                sceneEnvelope.classList.add('active');
+                currentScene = 'envelope';
+            },
+            letter: () => {
+                sceneEnvelope.classList.remove('active');
+                sceneLetter.classList.add('active');
+                currentScene = 'letter';
+                renderLetter();
+            }
+        };
+
+        function openScene(name) {
+            if (scenes[name]) scenes[name]();
+        }
+
+        function animateDoor() {
+            if (currentScene !== 'night') return;
+            doorCard.style.transform = 'translateY(-12px) scale(1.04)';
+            doorCard.style.boxShadow = '0 90px 190px rgba(0,0,0,0.44), inset 0 0 45px rgba(255,215,112,0.18)';
+            setTimeout(() => doorCard.style.transform = 'translateY(0) scale(1)', 400);
+            setTimeout(() => scenes.door(), 900);
+        }
+
+        function animateEnvelope() {
+            if (currentScene !== 'envelope') return;
+            envelopeFlap.style.transform = 'translateY(-18px) rotateX(18deg)';
+            envelopeCard.style.transform = 'translate(-50%, -50%) scale(1.08) rotate(0deg)';
+            envelopeCard.style.boxShadow = '0 90px 220px rgba(0,0,0,0.36)';
+            setTimeout(() => openScene('letter'), 900);
+        }
+
+        function renderLetter() {
+            letterBody.innerHTML = '';
+            letterParagraphs.forEach((line, idx) => {
+                const paragraph = document.createElement('p');
+                const typed = document.createElement('span');
+                typed.className = 'typed';
+                const cursor = document.createElement('span');
+                cursor.className = 'cursor';
+                paragraph.appendChild(typed);
+                paragraph.appendChild(cursor);
+                paragraph.style.animationDelay = `${idx * 0.16}s`;
+                letterBody.appendChild(paragraph);
+            });
+            typing.paragraph = 0;
+            typing.index = 0;
+            typing.running = false;
+            startTyping();
+        }
+
+        function startTyping() {
+            if (typing.running) return;
+            typing.running = true;
+            const paragraphs = letterBody.querySelectorAll('p');
+            const type = () => {
+                if (typing.paragraph >= paragraphs.length) {
+                    typing.running = false;
+                    return;
+                }
+                const paragraph = paragraphs[typing.paragraph];
+                const typedElement = paragraph.querySelector('.typed');
+                const text = letterParagraphs[typing.paragraph];
+                if (typing.index < text.length) {
+                    typedElement.textContent += text[typing.index];
+                    typing.index += 1;
+                    typing.timer = setTimeout(type, 28 + Math.random() * 28);
+                } else {
+                    paragraph.querySelector('.cursor').remove();
+                    typing.paragraph += 1;
+                    typing.index = 0;
+                    typing.timer = setTimeout(type, 420);
+                }
+            };
+            type();
+        }
+
+        function skipTyping() {
+            clearTimeout(typing.timer);
+            const paragraphs = letterBody.querySelectorAll('p');
+            paragraphs.forEach((paragraph, idx) => {
+                paragraph.style.opacity = '1';
+                paragraph.style.transform = 'translateY(0)';
+                paragraph.querySelector('.typed').textContent = letterParagraphs[idx];
+                const cursor = paragraph.querySelector('.cursor');
+                if (cursor) cursor.remove();
+            });
+            typing.running = false;
+        }
+
+        function replayLetter() {
+            if (currentScene !== 'letter') return;
+            renderLetter();
+        }
+
+        function closeLetter() {
+            if (currentScene !== 'letter') return;
+            sceneLetter.classList.remove('active');
+            sceneEnvelope.classList.add('active');
+            currentScene = 'envelope';
+            envelopeFlap.style.transform = '';
+            envelopeCard.style.transform = 'translate(-50%, -50%) rotate(-3deg)';
+            envelopeCard.style.boxShadow = '0 52px 120px rgba(0,0,0,0.24)';
+            setTimeout(() => {
+                sceneEnvelope.classList.remove('active');
+                sceneNight.classList.add('active');
+                currentScene = 'night';
+            }, 900);
+        }
+
+        function toggleMusic() {
+            if (!audioContext) initAudio();
+            musicPlaying = !musicPlaying;
+            musicBtn.classList.toggle('playing', musicPlaying);
+            musicBtn.textContent = musicPlaying ? '??' : '?';
+            if (musicPlaying) {
+                masterGain.gain.setTargetAtTime(0.04, audioContext.currentTime, 0.05);
+            } else {
+                masterGain.gain.setTargetAtTime(0, audioContext.currentTime, 0.05);
+            }
+        }
+
+        function initAudio() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioContext = new AudioContext();
+            masterGain = audioContext.createGain();
+            masterGain.gain.value = 0;
+            masterGain.connect(audioContext.destination);
+            const oscA = audioContext.createOscillator();
+            const oscB = audioContext.createOscillator();
+            const gainA = audioContext.createGain();
+            const gainB = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            const lfo = audioContext.createOscillator();
+            const lfoGain = audioContext.createGain();
+            oscA.type = 'triangle';
+            oscB.type = 'sine';
+            oscA.frequency.value = 174.61;
+            oscB.frequency.value = 220.0;
+            gainA.gain.value = 0.035;
+            gainB.gain.value = 0.028;
+            filter.type = 'lowpass';
+            filter.frequency.value = 900;
+            filter.Q.value = 0.95;
+            oscA.connect(gainA);
+            oscB.connect(gainB);
+            gainA.connect(filter);
+            gainB.connect(filter);
+            filter.connect(masterGain);
+            lfo.frequency.value = 0.12;
+            lfoGain.gain.value = 12;
+            lfo.connect(lfoGain);
+            lfoGain.connect(oscA.frequency);
+            lfoGain.connect(oscB.frequency);
+            oscA.start();
+            oscB.start();
+            lfo.start();
+        }
+
+        function setVolume(value) {
+            if (!masterGain) return;
+            masterGain.gain.setTargetAtTime(value * (musicPlaying ? 1 : 0), audioContext.currentTime, 0.05);
+        }
+
+        function createMouseTrail(event) {
+            const particle = document.createElement('div');
+            particle.className = 'mouse-particle';
+            particle.style.left = `${event.clientX}px`;
+            particle.style.top = `${event.clientY}px`;
+            document.body.appendChild(particle);
+            requestAnimationFrame(() => {
+                particle.style.transform = 'translate(-50%, -50%) scale(1.8)';
+                particle.style.opacity = '0';
+            });
+            setTimeout(() => particle.remove(), 650);
+        }
+
+        doorCard.addEventListener('click', animateDoor);
+        doorCard.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') animateDoor();
+        });
+        envelopeCard.addEventListener('click', animateEnvelope);
+        envelopeCard.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') animateEnvelope();
+        });
+        replayBtn.addEventListener('click', replayLetter);
+        skipBtn.addEventListener('click', skipTyping);
+        closeBtn.addEventListener('click', closeLetter);
+        downloadBtn.addEventListener('click', () => window.print());
+        musicBtn.addEventListener('click', toggleMusic);
+        volumeRange.addEventListener('input', (event) => setVolume(parseFloat(event.target.value)));
+        document.addEventListener('mousemove', createMouseTrail);
+
+        const style = document.createElement('style');
+        style.textContent = '@keyframes flashOut { 0% { opacity: 0; transform: scale(0.92); } 50% { opacity: 1; transform: scale(1.08); } 100% { opacity: 0; transform: scale(1.4); } }';
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
