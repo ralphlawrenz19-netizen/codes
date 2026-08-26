@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Good Morning ☀️</title>
+  <style>
+    :root{
+      --sun:#FFD166;
+      --sky1:#FFF5E6;
+      --sky2:#FFE8B8;
+      --gold:#FFD89B;
+      --accent:#FF6B9A;
+      --paper:#fffef8;
+      --envelope:#F7C6D0;
+      --soft-shadow: 0 8px 30px rgba(14,18,30,0.12);
+      --glass: rgba(255,255,255,0.6);
+    }
+    html,body{height:100%;margin:0;font-family: 'Georgia', serif;background:linear-gradient(180deg,var(--sky1),var(--sky2));-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+
+    /* Sun and horizon */
+    .horizon{position:absolute;left:0;right:0;top:6vh;height:60vh;pointer-events:none}
+    .sun-wrap{position:absolute;left:50%;transform:translateX(-50%);bottom:-20vh;z-index:1}
+    .sun{width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #FFF9D6, var(--sun));box-shadow:0 30px 80px rgba(255,170,80,0.18), 0 6px 30px rgba(255,160,50,0.12);filter:blur(.4px)}
+    @keyframes rise {0%{transform:translate(-50%,40vh) scale(.9)}50%{transform:translate(-50%,6vh) scale(1)}100%{transform:translate(-50%,-6vh) scale(1)} }
+    .sun-wrap.rise .sun{animation:rise 7s ease-in-out forwards}
+
+    /* gentle golden rays */
+    .rays{position:absolute;left:50%;top:50%;transform:translate(-50%,-10%);width:340px;height:340px;border-radius:50%;background:conic-gradient(from 0deg,#fff0 0 5deg, rgba(255,210,120,0.12) 5deg 10deg, #fff0 10deg 20deg);opacity:.6;mix-blend-mode:screen;filter:blur(16px);pointer-events:none}
+
+    /* big background sun (soft, behind everything) */
+    .big-sun{position:absolute;left:50%;transform:translateX(-50%);bottom:-6vh;width:820px;height:820px;border-radius:50%;background:radial-gradient(circle at 40% 35%, rgba(255,250,220,0.98), rgba(255,220,110,0.85) 38%, rgba(255,190,60,0.55) 62%, rgba(255,160,20,0.12) 80%, transparent 82%);filter:blur(32px);opacity:.95;z-index:0;pointer-events:none;animation:slowPulse 14s ease-in-out infinite}
+    @keyframes slowPulse{0%{transform:translateX(-50%) scale(.985)}50%{transform:translateX(-50%) scale(1.02)}100%{transform:translateX(-50%) scale(.985)}}
+
+    /* clouds */
+    .clouds{position:absolute;left:0;right:0;top:4vh;height:48vh;pointer-events:none;z-index:3;overflow:visible}
+    /* allow interacting with clouds (draggable) */
+    .clouds{position:absolute;left:0;right:0;top:4vh;height:48vh;pointer-events:auto;z-index:3;overflow:visible}
+    .cloud{position:absolute;background:radial-gradient(circle at 30% 30%, #ffffff, #f3f8ff 40%, rgba(255,255,255,0.92) 100%);border-radius:60px;filter:blur(1px);opacity:0.95;pointer-events:auto;touch-action:none;cursor:grab}
+    .cloud.dragging{cursor:grabbing}
+    .cloud::before,.cloud::after{content:'';position:absolute;background:inherit;border-radius:50%;}
+    .cloud::before{width:60%;height:70%;left:6%;top:-28%}
+    .cloud::after{width:48%;height:52%;right:6%;top:-12%}
+    /* position clouds initialy inside viewport so they appear instantly */
+    .cloud.c1{width:260px;height:82px;left:8%;top:6%;animation:cloudMove 46s linear infinite}
+    .cloud.c2{width:360px;height:110px;left:52%;top:12%;animation:cloudMove 62s linear infinite;opacity:0.92}
+    .cloud.c3{width:200px;height:72px;left:28%;top:32%;animation:cloudMove 52s linear infinite;opacity:0.95}
+    .cloud.c4{width:120px;height:50px;left:76%;top:22%;animation:cloudMove 36s linear infinite;opacity:0.9}
+    /* clouds drift slowly but start visible immediately */
+    @keyframes cloudMove{0%{transform:translateX(0)}100%{transform:translateX(40vw)}}
+    @media (max-width:520px){
+      .cloud.c1{width:160px;height:56px}
+      .cloud.c2{width:240px;height:76px}
+      .cloud.c3{width:120px;height:44px}
+      .clouds{top:2vh;height:34vh}
+    }
+
+    /* particles and sparkles */
+    .sparkles{position:absolute;inset:0;pointer-events:none;z-index:6}
+    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(255,240,200,0.95);box-shadow:0 0 10px rgba(255,230,150,0.9);opacity:0;transform:translateY(0);animation:floatUp 6s linear infinite}
+    @keyframes floatUp{0%{opacity:0;transform:translateY(60px) scale(.6)}10%{opacity:1}100%{opacity:0;transform:translateY(-120px) scale(1)} }
+
+    /* center envelope */
+    .center{position:relative;z-index:10;width:360px;max-width:86vw}
+    .envelope{width:100%;height:220px;background:linear-gradient(180deg,var(--envelope),#ffdfe9);border-radius:14px;position:relative;box-shadow:var(--soft-shadow);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+    .flap{position:absolute;left:0;right:0;top:0;height:55%;background:linear-gradient(180deg,#fff6f8,var(--envelope));transform-origin:top center;transition:transform .9s cubic-bezier(.2,.9,.2,1);z-index:8}
+    .seal{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#ff8aa1,#ff6b9a);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;z-index:9;box-shadow:0 8px 24px rgba(255,80,120,0.18)}
+    .paper{width:86%;height:78%;background:var(--paper);border-radius:6px;box-shadow:inset 0 -6px 18px rgba(0,0,0,0.03);transform:translateY(40%);transition:transform .9s cubic-bezier(.2,.9,.2,1);display:flex;align-items:center;justify-content:center;padding-top:0;box-sizing:border-box}
+    .letter{width:100%;background:transparent;border-radius:4px;padding:0 12px;box-sizing:border-box;opacity:0;display:flex;align-items:center;justify-content:center;text-align:center;height:100%}
+
+    /* opened state */
+    .envelope.open .flap{transform:rotateX(180deg)}
+    .envelope.open .seal{opacity:0;transform:translate(-50%,-70%) scale(.7)}
+    .envelope.open .paper{transform:translateY(-6%)}
+    .envelope.open .letter{opacity:1}
+
+    /* Typewriter text */
+    .greeting{font-size:28px;letter-spacing:2px;color:#553411;text-align:center;font-weight:700;text-shadow:0 6px 18px rgba(255,200,100,0.18)}
+    .letter.glow{font-size:48px;line-height:1;letter-spacing:4px;color:#FF8C42;text-shadow:0 0 28px rgba(255,200,120,0.98), 0 10px 40px rgba(255,150,60,0.12);font-weight:800}
+    .caret{display:inline-block;width:4px;height:1.2em;background:rgba(60,30,0,0.95);vertical-align:bottom;margin-left:8px;animation:blink 1s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    /* floating petals/hearts after open */
+    .post-effects{position:absolute;inset:0;pointer-events:none;z-index:12}
+    .petal,.heart{position:absolute;opacity:0;transform-origin:center;animation:riseAndFade 6s linear forwards}
+    @keyframes riseAndFade{0%{opacity:0;transform:translateY(0) scale(.6)}10%{opacity:1}100%{opacity:0;transform:translateY(-420px) rotate(360deg) scale(1)} }
+
+    /* grass at bottom */
+    .grass{position:absolute;left:0;right:0;bottom:0;height:220px;background:linear-gradient(180deg,#76c56a,#4aa24a);box-shadow:inset 0 8px 18px rgba(0,0,0,0.08);z-index:5;pointer-events:none}
+    .grass::before{content:'';position:absolute;left:0;right:0;top:-30px;height:60px;background-image:radial-gradient(circle at 8% 60%, rgba(255,255,255,0.03) 0 4px, transparent 6px), radial-gradient(circle at 25% 50%, rgba(255,255,255,0.02) 0 3px, transparent 5px);opacity:.25}
+    /* subtle blades using linear-gradients overlay */
+    .grass::after{content:'';position:absolute;left:0;right:0;bottom:8px;height:36px;background-image:repeating-linear-gradient(90deg, rgba(58,131,63,0.18) 0 6px, rgba(58,131,63,0.06) 6px 12px);opacity:.9}
+
+    @media (max-width:520px){
+      .big-sun{width:420px;height:420px;bottom:-18vh}
+      .grass{height:90px}
+    }
+
+    /* ground layer with trees and animals (enlarged) */
+    .ground{position:absolute;left:0;right:0;bottom:0;height:320px;z-index:7;pointer-events:auto;display:flex;align-items:flex-end;justify-content:space-around;padding:0 6vw;box-sizing:border-box}
+    .ground svg{filter:drop-shadow(0 10px 30px rgba(0,0,0,0.14));}
+    /* Keep most ground decor non-interactive, but allow the house and its UI */
+    .ground svg, .ground .tree, .ground .animal, .flowers, .pond, .fountain {pointer-events:none}
+    .ground .house, .house-label, .house-envelope, .pond, .pond-label, .pond-envelope {pointer-events:auto}
+    .tree{transform-origin:center bottom;animation:sway 6s ease-in-out infinite}
+    .tree.t2{animation-duration:8s}
+    @keyframes sway{0%{transform:translateY(0) rotate(-1deg) scale(1)}50%{transform:translateY(4px) rotate(1.2deg) scale(1)}100%{transform:translateY(0) rotate(-1deg) scale(1)}}
+    /* animals keep gentle bob */
+    .animal{transform-origin:center bottom;animation:bob 4.5s ease-in-out infinite}
+    .animal.a2{animation-delay:0.6s}
+    @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+
+    /* flowers on ground */
+    .flowers{position:absolute;left:0;right:0;bottom:18px;height:80px;pointer-events:none;z-index:9}
+    .flower{position:absolute;width:32px;height:32px;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.12));transform-origin:center bottom;animation:flowerSway 5s ease-in-out infinite}
+    .flower.f1{left:6%;animation-delay:0s}
+    .flower.f2{left:18%;animation-delay:0.3s}
+    .flower.f3{left:34%;animation-delay:0.6s}
+    .flower.f4{left:56%;animation-delay:0.2s}
+    .flower.f5{left:74%;animation-delay:0.5s}
+    .flower.f6{left:88%;animation-delay:0.1s}
+    @keyframes flowerSway{0%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-8px) rotate(6deg)}100%{transform:translateY(0) rotate(-6deg)}}
+
+    /* pond and fish */
+    .pond{position:absolute;bottom:48px;width:180px;height:84px;border-radius:50%/40%;background:linear-gradient(180deg,#83cde3,#4aa5d6);box-shadow:inset 0 -8px 20px rgba(0,0,0,0.12);left:8%;z-index:8}
+    .fish{position:absolute;width:28px;height:18px;transform-origin:center;animation:swim 3.2s linear infinite}
+    .fish.f2{animation-duration:4.6s;animation-delay:0.4s}
+    @keyframes swim{0%{transform:translateX(-10px) scaleX(1)}50%{transform:translateX(140px) scaleX(-1)}100%{transform:translateX(-10px) scaleX(1)}}
+
+    /* fountain */
+    .fountain{position:absolute;bottom:60px;left:44%;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 25%, #e8f8ff,#c4efff);box-shadow:0 8px 18px rgba(0,0,0,0.12);z-index:9;display:flex;align-items:center;justify-content:center}
+    .fountain .water{width:6px;height:28px;background:linear-gradient(#bfefff,#7fdfff);border-radius:6px;animation:jet 900ms ease-in-out infinite}
+    @keyframes jet{0%{transform:translateY(6px) scaleY(.6);opacity:0.6}50%{transform:translateY(-16px) scaleY(1);opacity:1}100%{transform:translateY(6px) scaleY(.6);opacity:0.6}}
+
+    /* house */
+    .house{position:absolute;bottom:38px;right:8%;width:160px;height:120px;z-index:9}
+    .house .walls{fill:#ffefdb}
+    .house .roof{fill:#d96b5a}
+    .house{cursor:pointer}
+    .house-label{position:absolute;right:8%;bottom:170px;background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,255,255,0.92));padding:6px 10px;border-radius:14px;font-weight:700;color:#6b3e1a;box-shadow:0 8px 20px rgba(0,0,0,0.08);z-index:13;pointer-events:auto;cursor:pointer}
+
+    .pond-label{position:absolute;left:8%;bottom:140px;background:linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,255,255,0.92));padding:6px 10px;border-radius:14px;font-weight:700;color:#05535b;box-shadow:0 8px 20px rgba(0,0,0,0.08);z-index:13;pointer-events:auto;cursor:pointer}
+
+    .pond-envelope{position:absolute;left:8%;bottom:140px;width:220px;background:var(--paper);padding:10px;border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,0.14);z-index:14;opacity:0;transform:translateY(8px) scale(.98);transition:opacity .24s ease,transform .28s ease;pointer-events:auto;overflow-x:hidden;overflow-y:visible}
+    .pond-envelope.show{opacity:1;transform:translateY(0) scale(1)}
+    .pond-envelope .pond-letter{font-size:14px;color:#073f45;line-height:1.35;text-align:left;min-height:40px;white-space:normal;word-break:break-word;overflow-wrap:anywhere}
+
+    /* small letter popup shown when house clicked */
+    .house-envelope{position:absolute;right:8%;bottom:180px;width:240px;background:var(--paper);padding:12px;border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,0.14);z-index:14;opacity:0;transform:translateY(8px) scale(.98);transition:opacity .24s ease,transform .28s ease;pointer-events:auto}
+    .house-envelope.show{opacity:1;transform:translateY(0) scale(1)}
+    .house-envelope .house-letter{font-size:14px;color:#553411;line-height:1.25;text-align:center;min-height:52px}
+    .house-envelope .house-letter.glow{font-size:16px;text-shadow:none;color:#444}
+
+    /* birds flying across */
+    .bird{position:absolute;width:36px;height:24px;z-index:11;animation:birdFly 12s linear infinite}
+    .bird.b2{animation-duration:9s;animation-delay:1.2s}
+    @keyframes birdFly{0%{transform:translateX(-12vw) translateY(0)}50%{transform:translateX(60vw) translateY(-6vh)}100%{transform:translateX(120vw) translateY(0)}}
+
+    @media (max-width:520px){
+      .ground{bottom:18px;height:110px;padding:0 4vw}
+      .ground svg{width:auto;height:auto}
+    }
+
+    /* responsiveness */
+    @media (max-width:520px){
+      .big-sun{width:420px;height:420px;bottom:-18vh}
+      .grass{height:90px}
+      .sun{width:120px;height:120px}
+      .rays{width:220px;height:220px}
+      .letter.glow{font-size:28px}
+      .envelope{height:200px}
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="horizon">
+      <div class="sun-wrap" id="sunWrap">
+        <div class="rays" aria-hidden="true"></div>
+        <div class="sun"></div>
+      </div>
+    </div>
+
+    <div class="sparkles" id="sparkles"></div>
+    <div class="big-sun" aria-hidden="true"></div>
+    <div class="clouds" id="clouds" aria-hidden="true">
+      <div class="cloud c1"></div>
+      <div class="cloud c2"></div>
+      <div class="cloud c3"></div>
+      <div class="cloud c4"></div>
+    </div>
+
+    <div class="center">
+      <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Open letter">
+        <div class="flap"></div>
+        <div class="paper">
+          <div class="letter" id="letter"></div>
+        </div>
+        <div class="seal">❤</div>
+      </div>
+
+      <div class="post-effects" id="postEffects"></div>
+    </div>
+    <!-- grass at bottom -->
+    <div class="grass" aria-hidden="true"></div>
+    <!-- ground with trees and animals -->
+    <div class="ground" aria-hidden="true">
+      <svg class="tree t1" viewBox="0 0 100 140" width="240" height="320" xmlns="http://www.w3.org/2000/svg">
+        <rect x="44" y="90" width="12" height="40" rx="2" fill="#6b3e1a" />
+        <circle cx="50" cy="64" r="28" fill="#2e8b57" />
+        <circle cx="34" cy="74" r="20" fill="#2aa36a" />
+        <circle cx="66" cy="74" r="20" fill="#2aa36a" />
+      </svg>
+      <svg class="tree t2" viewBox="0 0 100 140" width="320" height="360" xmlns="http://www.w3.org/2000/svg">
+        <rect x="74" y="96" width="12" height="40" rx="2" fill="#6b3e1a" />
+        <circle cx="80" cy="70" r="36" fill="#2e8b57" />
+        <circle cx="62" cy="84" r="22" fill="#2aa36a" />
+      </svg>
+      <svg class="tree t3" viewBox="0 0 100 140" width="200" height="260" xmlns="http://www.w3.org/2000/svg">
+        <rect x="46" y="100" width="10" height="36" rx="2" fill="#6b3e1a" />
+        <circle cx="50" cy="70" r="32" fill="#2f9b61" />
+        <circle cx="36" cy="86" r="18" fill="#33a86e" />
+      </svg>
+      <svg class="tree t4" viewBox="0 0 100 140" width="180" height="240" xmlns="http://www.w3.org/2000/svg">
+        <rect x="44" y="92" width="10" height="38" rx="2" fill="#614026" />
+        <circle cx="50" cy="64" r="28" fill="#2a8b57" />
+      </svg>
+      <svg class="tree t5" viewBox="0 0 100 140" width="140" height="200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="46" y="96" width="8" height="34" rx="2" fill="#5a3b18" />
+        <circle cx="50" cy="68" r="24" fill="#2fb06a" />
+      </svg>
+      <svg class="animal a1" viewBox="0 0 80 48" width="80" height="48" xmlns="http://www.w3.org/2000/svg">
+        <!-- simple rabbit silhouette -->
+        <path d="M10 30 q4 -10 14 -10 q8 0 12 6 q8 -2 16 6 q-6 12 -22 12 q-14 0 -20 -14z" fill="#b87b58" />
+        <circle cx="24" cy="18" r="4" fill="#b87b58" />
+      </svg>
+      <svg class="animal a2" viewBox="0 0 120 64" width="120" height="64" xmlns="http://www.w3.org/2000/svg">
+        <!-- simple fox-like silhouette -->
+        <path d="M10 44 q10 -18 36 -18 q18 0 28 12 q12 -8 30 0 q-8 20 -36 20 q-26 0 -58 -14z" fill="#ff8b4a" />
+      </svg>
+      <!-- flowers and scene extras -->
+      <div class="flowers" aria-hidden="true">
+        <svg class="flower f1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="#ffb3d1"><circle cx="6" cy="8" r="3"/><circle cx="12" cy="4" r="3"/><circle cx="18" cy="8" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="15" cy="16" r="3"/></g><circle cx="12" cy="11" r="2.6" fill="#ffd166"/></svg>
+        <svg class="flower f2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="#ffd3a6"><circle cx="6" cy="8" r="3"/><circle cx="12" cy="4" r="3"/><circle cx="18" cy="8" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="15" cy="16" r="3"/></g><circle cx="12" cy="11" r="2.6" fill="#ff6b9a"/></svg>
+        <svg class="flower f3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="#ffd6ea"><circle cx="6" cy="8" r="3"/><circle cx="12" cy="4" r="3"/><circle cx="18" cy="8" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="15" cy="16" r="3"/></g><circle cx="12" cy="11" r="2.6" fill="#ffd166"/></svg>
+        <svg class="flower f4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="#ffb3d1"><circle cx="6" cy="8" r="3"/><circle cx="12" cy="4" r="3"/><circle cx="18" cy="8" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="15" cy="16" r="3"/></g><circle cx="12" cy="11" r="2.6" fill="#ffd166"/></svg>
+        <svg class="flower f5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="#ffd3a6"><circle cx="6" cy="8" r="3"/><circle cx="12" cy="4" r="3"/><circle cx="18" cy="8" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="15" cy="16" r="3"/></g><circle cx="12" cy="11" r="2.6" fill="#ff6b9a"/></svg>
+        <svg class="flower f6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="#ffd6ea"><circle cx="6" cy="8" r="3"/><circle cx="12" cy="4" r="3"/><circle cx="18" cy="8" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="15" cy="16" r="3"/></g><circle cx="12" cy="11" r="2.6" fill="#ffd166"/></svg>
+    </div>
+      <!-- pond with fish -->
+      <div class="pond" aria-hidden="true">
+        <svg viewBox="0 0 160 72" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:0;top:0;width:100%;height:100%">
+          <ellipse cx="80" cy="36" rx="74" ry="30" fill="rgba(255,255,255,0.06)"/>
+        </svg>
+        <svg class="fish f1" viewBox="0 0 24 14" style="left:8px;top:28px"><path d="M2 7 q6 -6 12 -2 q4 2 8 1 q-6 8 -20 4z" fill="#ff9b6b"/></svg>
+        <svg class="fish f2" viewBox="0 0 24 14" style="left:20px;top:48px"><path d="M2 7 q6 -6 12 -2 q4 2 8 1 q-6 8 -20 4z" fill="#ffd166"/></svg>
+      </div>
+      <div class="pond-label" id="pondLabel">click</div>
+      <div class="pond-envelope" id="pondEnvelope" aria-hidden="true">
+        <div class="pond-letter" id="pondLetterText"></div>
+      </div>
+
+      <!-- fountain -->
+      <div class="fountain" aria-hidden="true">
+        <div class="water"></div>
+      </div>
+
+      <!-- small house -->
+      <svg class="house" viewBox="0 0 200 160" tabindex="0" role="button" aria-label="Open house letter" xmlns="http://www.w3.org/2000/svg">
+        <rect x="28" y="60" width="140" height="76" class="walls" rx="6" />
+        <polygon points="18,66 100,12 182,66" class="roof" />
+        <rect x="86" y="92" width="28" height="44" fill="#6b3e1a" rx="4"/>
+      </svg>
+      <div class="house-label" id="houseLabel">click</div>
+      <div class="house-envelope" id="houseEnvelope" aria-hidden="true">
+        <div class="house-letter" id="houseLetterText"></div>
+      </div>
+
+      <!-- horse and bunny silhouettes -->
+      <svg class="horse" viewBox="0 0 220 120" width="180" height="96" style="position:relative;z-index:9" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 80 q18 -36 56 -36 q18 0 38 14 q18 -10 44 -6 q-8 28 -42 40 q-26 8 -94 -12z" fill="#7b5a3a"/>
+      </svg>
+      <svg class="bunny" viewBox="0 0 80 48" width="64" height="40" style="position:relative;z-index:9" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 30 q4 -10 14 -10 q8 0 12 6 q8 -2 16 6 q-6 12 -22 12 q-14 0 -20 -14z" fill="#f0d9c8" />
+      </svg>
+  </div>
+
+  <script>
+    // Sun rise on load
+    const sunWrap = document.getElementById('sunWrap');
+    setTimeout(()=> sunWrap.classList.add('rise'), 250);
+
+    // sparkles generator
+    const sparkles = document.getElementById('sparkles');
+    function spawnSparkle(){
+      const s = document.createElement('div');
+      s.className='sparkle';
+      const x = Math.random()*100; const y = 60 + Math.random()*30;
+      s.style.left = x + 'vw'; s.style.top = y + 'vh';
+      s.style.animationDuration = (6+Math.random()*6)+'s';
+      s.style.opacity = Math.random();
+      sparkles.appendChild(s);
+      setTimeout(()=> s.remove(), 14000);
+    }
+    for(let i=0;i<18;i++) setTimeout(spawnSparkle, i*300);
+    setInterval(()=>{ if(Math.random()>0.6) spawnSparkle(); }, 700);
+
+    // Envelope open + letter slide + typewriter
+    const envelope = document.getElementById('envelope');
+    const letter = document.getElementById('letter');
+    const post = document.getElementById('postEffects');
+    const GREETING = 'GOOD MORNING ☀️';
+
+    function typeText(el, text, speed=90){
+      el.textContent=''; el.classList.add('glow');
+      let i=0;
+      const caret = document.createElement('span'); caret.className='caret';
+      el.appendChild(caret);
+      function step(){
+        if(i < text.length){
+          caret.before(document.createTextNode(text.charAt(i)));
+          i++; setTimeout(step, speed + Math.random()*60);
+        } else { caret.remove(); }
+      }
+      step();
+    }
+
+    function spawnPetal(x,y,delay=0){
+      const el = document.createElement('div'); el.className='petal';
+      el.style.left = x + 'vw'; el.style.top = y + 'vh';
+      el.style.width = (12+Math.random()*18)+'px'; el.style.height = (16+Math.random()*20)+'px';
+      el.style.background = 'radial-gradient(circle at 30% 30%, #fff3f5, #ffb3c9)';
+      el.style.borderRadius = '50% 50% 50% 50%/60% 60% 40% 40%';
+      el.style.opacity = 0; el.style.animationDelay = delay + 's';
+      post.appendChild(el);
+      setTimeout(()=> el.remove(), 8000 + (Math.random()*4000));
+    }
+    function spawnHeart(x,y,delay=0){
+      const h = document.createElement('div'); h.className='heart';
+      h.style.left = x + 'vw'; h.style.top = y + 'vh'; h.style.width='14px'; h.style.height='14px';
+      h.style.background='linear-gradient(135deg,#ff9bb3,#ff6b9a)';
+      h.style.borderRadius='14px 14px 0 0'; h.style.transform='rotate(-45deg)';
+      h.style.boxShadow='0 8px 20px rgba(255,100,140,0.18)';
+      h.style.animationDelay = delay + 's';
+      post.appendChild(h);
+      setTimeout(()=> h.remove(), 9000 + (Math.random()*4000));
+    }
+
+    function bloomEffects(){
+      for(let i=0;i<12;i++){
+        const x = 40 + Math.random()*20 -10; const y = 60 + Math.random()*20;
+        spawnPetal(x + (Math.random()-0.5)*40, y + Math.random()*10, Math.random()*1.6);
+        if(Math.random()>0.4) spawnHeart(x + (Math.random()-0.5)*40, y + Math.random()*10, Math.random()*1.6);
+      }
+    }
+
+    function openEnvelope(){
+      envelope.classList.add('open');
+      // delay small to allow flap animation
+      setTimeout(()=>{
+        letter.style.opacity = 1;
+        typeText(letter, GREETING, 90);
+        setTimeout(bloomEffects, 600);
+      }, 700);
+    }
+
+    envelope.addEventListener('click', ()=>{
+      if(envelope.classList.contains('open')) return; openEnvelope();
+    });
+    envelope.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') openEnvelope(); });
+
+    // Accessibility: open on double-tap for mobile
+    let lastTap = 0; document.addEventListener('touchstart', ()=>{ const t = Date.now(); if(t - lastTap < 350) openEnvelope(); lastTap = t; });
+
+    // small initial floating petals
+    setTimeout(()=>{ for(let i=0;i<6;i++){ spawnPetal(10+Math.random()*80,60+Math.random()*20, Math.random()*2); } }, 800);
+
+    // Make clouds draggable (pointer events). Pause CSS animation while dragging and update left position.
+    (function enableCloudDrag(){
+      const cloudEls = document.querySelectorAll('.cloud');
+      cloudEls.forEach(c=>{
+        c.addEventListener('pointerdown', startDrag);
+      });
+
+      function startDrag(e){
+        e.preventDefault();
+        const c = e.currentTarget;
+        c.setPointerCapture(e.pointerId);
+        c.classList.add('dragging');
+        // pause animation
+        c.dataset.anim = c.style.animationPlayState || '';
+        c.style.animationPlayState = 'paused';
+        const parentRect = c.parentElement.getBoundingClientRect();
+        const rect = c.getBoundingClientRect();
+        const startLeft = rect.left - parentRect.left;
+        const offsetX = e.clientX - rect.left;
+
+        function onMove(ev){
+          const x = ev.clientX - parentRect.left - offsetX;
+          // clamp inside parent
+          const min = -rect.width*0.1;
+          const max = parentRect.width - rect.width*0.9;
+          c.style.left = Math.max(min, Math.min(max, x)) + 'px';
+        }
+        function onUp(ev){
+          try{ c.releasePointerCapture(ev.pointerId); }catch(e){}
+          c.classList.remove('dragging');
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          // leave animation paused so cloud stays where user left it
+        }
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      }
+    })();
+
+    // Birds are absolute elements that fly across the sky
+    (function spawnBirds(){
+      const sky = document.querySelector('.horizon');
+      const b1 = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      b1.setAttribute('viewBox','0 0 24 16'); b1.classList.add('bird'); b1.style.left='-10vw'; b1.style.top='8vh';
+      b1.innerHTML = '<path d="M2 8 q6 -6 10 -2 q6 -4 10 -2" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+      const b2 = b1.cloneNode(true); b2.classList.add('b2'); b2.style.left='-20vw'; b2.style.top='14vh';
+      document.body.appendChild(b1); document.body.appendChild(b2);
+    })();
+
+    // small runtime: place pond fish animations initial offsets
+    (function initFish(){
+      const ponds = document.querySelectorAll('.pond');
+      ponds.forEach(p=>{
+        const fishes = p.querySelectorAll('.fish');
+        fishes.forEach((f,i)=>{
+          f.style.left = (8 + i*12) + 'px';
+        });
+      });
+    })();
+
+    // house click -> show small letter popup
+    (function houseClickLetter(){
+      const house = document.querySelector('.house');
+      const label = document.getElementById('houseLabel');
+      const envelope = document.getElementById('houseEnvelope');
+      const textEl = document.getElementById('houseLetterText');
+      const MSG = 'Hope you ahve a nice day hshahsh';
+
+      function show(){
+        // ensure visible and accessible
+        envelope.style.display = '';
+        envelope.setAttribute('aria-hidden','false');
+        textEl.textContent = '';
+        // add class after a frame so transition reliably runs, then start typing
+        requestAnimationFrame(()=>{
+          envelope.classList.add('show');
+          setTimeout(()=> typeText(textEl, MSG, 60), 60);
+        });
+      }
+      function hide(){
+        envelope.classList.remove('show');
+        envelope.setAttribute('aria-hidden','true');
+        // clear text after closing
+        setTimeout(()=> textEl.textContent = '', 300);
+      }
+
+      house.addEventListener('click', ()=>{ if(envelope.classList.contains('show')) hide(); else show(); });
+      house.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); if(envelope.classList.contains('show')) hide(); else show(); } });
+      label.addEventListener('click', ()=>{ if(envelope.classList.contains('show')) hide(); else show(); });
+    })();
+
+    // pond click -> show small letter popup
+    (function pondClickLetter(){
+      const pond = document.querySelector('.pond');
+      const label = document.getElementById('pondLabel');
+      const envelope = document.getElementById('pondEnvelope');
+      const textEl = document.getElementById('pondLetterText');
+      const MSG = 'FISH FISH FISH FISH BLUBLUBLUBLUBLUBLUBBLUBLLUBLUBLUBLUB MORNING';
+
+      function show(){
+        envelope.style.display = '';
+        envelope.setAttribute('aria-hidden','false');
+        textEl.textContent = '';
+        requestAnimationFrame(()=>{
+          envelope.classList.add('show');
+          setTimeout(()=> typeText(textEl, MSG, 70), 80);
+        });
+      }
+      function hide(){
+        envelope.classList.remove('show');
+        envelope.setAttribute('aria-hidden','true');
+        setTimeout(()=> textEl.textContent = '', 300);
+      }
+
+      if(pond){
+        pond.setAttribute('tabindex','0');
+        pond.setAttribute('role','button');
+        pond.setAttribute('aria-label','Open pond letter');
+        pond.addEventListener('click', ()=>{ if(envelope.classList.contains('show')) hide(); else show(); });
+        pond.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); if(envelope.classList.contains('show')) hide(); else show(); } });
+      }
+      label.addEventListener('click', ()=>{ if(envelope.classList.contains('show')) hide(); else show(); });
+    })();
+
+  </script>
+</body>
+</html>
